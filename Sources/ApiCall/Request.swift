@@ -1,7 +1,7 @@
 import Foundation
 @available(macOS 10.15.0, *)
 @available(iOS 13.0.0, *)
-public class Request {
+public class Request : @unchecked Sendable {
     public static let shared = Request()
     var BASE_URL = String()
     var header = [String: String]()

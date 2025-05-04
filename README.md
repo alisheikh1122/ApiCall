@@ -59,6 +59,14 @@ Request.shared.uploadData(LanguageModel.self, method: .post, imageData: imgData,
             }
         }
 ```
+### Internet Reachabilty Check
+```
+        if Reachability.isConnectedToNetwork() {
+            //INTERNET IS CONNECTED
+        } else {
+            //NO INTERNET
+        }
+```
 
 
 
