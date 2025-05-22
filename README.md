@@ -21,7 +21,12 @@ func application(_ application: UIApplication, didFinishLaunchingWithOptions lau
             "Accept" : "application/json",
             "Accept-Language": "en",
         ]
-        Request.shared.setupVariables(baseUrl: "BASE_URL OR Server URL", header: header)
+        // if api content type is FormUrlEncoded, then use :
+        Request.shared.setupVariables(baseUrl: "", header: [:], errorModel: nil, isFormUrlEncoded: true, isDebuggingEnabled: true)
+        
+        // if its application/json, then use :
+        Request.shared.setupVariables(baseUrl: "", header: [:], errorModel: nil, isFormUrlEncoded: false, isDebuggingEnabled: true)
+        
         return true
     }
 ```
