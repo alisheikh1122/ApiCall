@@ -7,23 +7,28 @@ public class Request : @unchecked Sendable {
     var header = [String: String]()
     var errorModel: Codable?
     var isFormUrlEncoded: Bool?
+    var isMultipartFormData: Bool?
     var isDebuggingEnabled = false
 
-    public func setupVariables(baseUrl: String, header: [String: String], errorModel: Codable? = nil, isFormUrlEncoded: Bool? = false, isDebuggingEnabled: Bool = false) {
+    public func setupVariables(baseUrl: String, header: [String: String], errorModel: Codable? = nil, isFormUrlEncoded: Bool? = false,isMultipartFormData: Bool? = false, isDebuggingEnabled: Bool = false) {
         Request.shared.BASE_URL = baseUrl
         Request.shared.header = header
         Request.shared.errorModel = errorModel
         Request.shared.isFormUrlEncoded = isFormUrlEncoded
         Request.shared.isDebuggingEnabled = isDebuggingEnabled
+        Request.shared.isMultipartFormData = isMultipartFormData
     }
 
-    public func requestApi<T: Codable>(_ type: T.Type, baseUrl: String? = nil, method: HTTPMethod, url: String, params: [String: Any]? = nil, isCamelCase: Bool? = true) async throws -> T {
+    public func requestApi<T: Codable>(_ type: T.Type, baseUrl: String? = nil, method: HTTPMethod, url: String, params: [String: Any]? = nil, isCamelCase: Bool? = true,isMultipartFormData : Bool = false ) async throws -> T {
         if !NetworkReachability.isConnectedToNetwork() {
             throw ServiceError.noInternetConnection
         }
         
         var request = URLRequest(url: URL(string: ((baseUrl != nil ? baseUrl : BASE_URL) ?? BASE_URL) + url)!)
-        if isFormUrlEncoded == true {
+        if isMultipartFormData {
+            let boundary = "Boundary-\(UUID().uuidString)"
+            header.updateValue("multipart/form-data; boundary=\(boundary)", forKey: "Content-Type")
+        } else if isFormUrlEncoded == true {
             header.updateValue("application/x-www-form-urlencoded", forKey: "Content-Type")
             if let params {
                 let queryString = getqueryString(dict: params)
