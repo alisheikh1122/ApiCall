@@ -19,7 +19,7 @@ public class Request : @unchecked Sendable {
         Request.shared.isMultipartFormData = isMultipartFormData
     }
 
-    public func requestApi<T: Codable>(_ type: T.Type, baseUrl: String? = nil, method: HTTPMethod, url: String, params: [String: Any]? = nil, isCamelCase: Bool? = true,isMultipartFormData : Bool = false ) async throws -> T {
+    public func requestApi<T: Codable>(_ type: T.Type, baseUrl: String? = nil, method: HTTPMethod, url: String, params: [String: Any]? = nil,paramsArray: [[String: Any]]? = nil, isCamelCase: Bool? = true,isMultipartFormData : Bool = false ) async throws -> T {
         if !NetworkReachability.isConnectedToNetwork() {
             throw ServiceError.noInternetConnection
         }
@@ -32,6 +32,9 @@ public class Request : @unchecked Sendable {
             header.updateValue("application/x-www-form-urlencoded", forKey: "Content-Type")
             if let params {
                 let queryString = getqueryString(dict: params)
+                request.httpBody = queryString.data(using: .utf8)
+            } else if let paramsArray {
+                let queryString = getQueryString(from: paramsArray)
                 request.httpBody = queryString.data(using: .utf8)
             }
         } else {
@@ -188,5 +191,18 @@ public class Request : @unchecked Sendable {
         }
         output = String(output.dropLast())
         return output
+    }
+    func getQueryString(from array: [[String: Any]]) -> String {
+        var components: [String] = []
+
+        for dict in array {
+            for (key, value) in dict {
+                let encodedKey = key.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? key
+                let encodedValue = "\(value)".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "\(value)"
+                components.append("\(encodedKey)=\(encodedValue)")
+            }
+        }
+
+        return components.joined(separator: "&")
     }
 }
