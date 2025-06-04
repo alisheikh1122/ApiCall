@@ -27,10 +27,10 @@ public class Request : @unchecked Sendable {
         var request = URLRequest(url: URL(string: ((baseUrl != nil ? baseUrl : BASE_URL) ?? BASE_URL) + url)!)
         if isMultipartFormData {
             let boundary = "Boundary-\(UUID().uuidString)"
-            header.updateValue("multipart/form-data; boundary=\(boundary)", forKey: "Content-Type")
-            if let paramsArray {
-                let queryString = getQueryString(from: paramsArray)
-                request.httpBody = queryString.data(using: .utf8)
+            header["Content-Type"] = "multipart/form-data; boundary=\(boundary)"
+            
+            if let paramsArray = paramsArray {
+                request.httpBody = createMultipartBody(paramsArray: paramsArray, boundary: boundary)
             }
         } else if isFormUrlEncoded == true {
             header.updateValue("application/x-www-form-urlencoded", forKey: "Content-Type")
@@ -205,5 +205,39 @@ public class Request : @unchecked Sendable {
         }
 
         return components.joined(separator: "&")
+    }
+    private func createMultipartBody(paramsArray: [[String: Any]], boundary: String) -> Data {
+        var body = Data()
+        
+        for param in paramsArray {
+            guard
+                let key = param["key"] as? String,
+                let value = param["value"],
+                let type = param["type"] as? String
+            else {
+                continue
+            }
+            
+            body.append("--\(boundary)\r\n".data(using: .utf8)!)
+            
+            if type == "file",
+               let fileData = value as? Data,
+               let filename = param["filename"] as? String,
+               let mimeType = param["mimeType"] as? String {
+                
+                body.append("Content-Disposition: form-data; name=\"\(key)\"; filename=\"\(filename)\"\r\n".data(using: .utf8)!)
+                body.append("Content-Type: \(mimeType)\r\n\r\n".data(using: .utf8)!)
+                body.append(fileData)
+                body.append("\r\n".data(using: .utf8)!)
+                
+            } else {
+                let stringValue = String(describing: value)
+                body.append("Content-Disposition: form-data; name=\"\(key)\"\r\n\r\n".data(using: .utf8)!)
+                body.append("\(stringValue)\r\n".data(using: .utf8)!)
+            }
+        }
+        
+        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+        return body
     }
 }
