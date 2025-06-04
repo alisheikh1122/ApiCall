@@ -28,13 +28,14 @@ public class Request : @unchecked Sendable {
         if isMultipartFormData {
             let boundary = "Boundary-\(UUID().uuidString)"
             header.updateValue("multipart/form-data; boundary=\(boundary)", forKey: "Content-Type")
+            if let paramsArray {
+                let queryString = getQueryString(from: paramsArray)
+                request.httpBody = queryString.data(using: .utf8)
+            }
         } else if isFormUrlEncoded == true {
             header.updateValue("application/x-www-form-urlencoded", forKey: "Content-Type")
             if let params {
                 let queryString = getqueryString(dict: params)
-                request.httpBody = queryString.data(using: .utf8)
-            } else if let paramsArray {
-                let queryString = getQueryString(from: paramsArray)
                 request.httpBody = queryString.data(using: .utf8)
             }
         } else {
