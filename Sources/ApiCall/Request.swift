@@ -27,7 +27,7 @@ public class Request : @unchecked Sendable {
         var request = URLRequest(url: URL(string: ((baseUrl != nil ? baseUrl : BASE_URL) ?? BASE_URL) + url)!)
         if isMultipartFormData {
             let boundary = "Boundary-\(UUID().uuidString)"
-            header["Content-Type"] = "multipart/form-data; boundary=\(boundary)"
+            header.updateValue("multipart/form-data; boundary=\(boundary)", forKey: "Content-Type")
             
             if let paramsArray = paramsArray {
                 request.httpBody = createMultipartBody(paramsArray: paramsArray, boundary: boundary)
